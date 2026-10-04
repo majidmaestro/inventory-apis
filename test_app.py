@@ -1,10 +1,3 @@
-"""
-Unit tests for app.py.
-Run with: pytest
-Uses Flask's test client (no need for the server to be running)
-and unittest.mock to simulate external API responses so tests don't
-depend on actually reaching OpenFoodFacts over the network.
-"""
 
 import pytest
 from unittest.mock import patch, Mock
@@ -91,9 +84,7 @@ def test_delete_item_not_found(client):
     assert response.status_code == 404
 
 
-# ---------------------------------------------------------------------
-# External API tests — mocked, so no real network call happens.
-# ---------------------------------------------------------------------
+
 
 @patch("app.requests.get")
 def test_lookup_external_product_found(mock_get, client):

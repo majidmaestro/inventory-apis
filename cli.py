@@ -1,9 +1,3 @@
-"""
-Simple command-line interface for the Inventory Management API.
-Run this while app.py is running in another terminal (python app.py),
-then run this file separately: python cli.py
-"""
-
 import requests
 
 BASE_URL = "http://127.0.0.1:5000"

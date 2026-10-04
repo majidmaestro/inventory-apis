@@ -3,28 +3,20 @@ import requests
 
 app = Flask(__name__)
 
-# ---------------------------------------------------------------------
-# In-memory "database" — a simple list of dictionaries.
-# In a real system this would be an actual database (that comes later
-# in the course, Week 3-4 with SQL/SQLAlchemy). For now this array
-# simulates storage, as the brief asks for.
-# ---------------------------------------------------------------------
+# two starting items for demo purpose majorly.
+
 inventory = [
     {"id": 1, "barcode": 20304567, "name": "Almond milk", "price": 250, "quantity": 67, "brand": "brookside"},
     {"id": 2, "barcode": 20304667, "name": "bread", "price": 450, "quantity": 89, "brand": "Super Loaf"}
 ]
 
-# Keeps track of the next id to assign when a new item is created.
-# Starts at 3 because ids 1 and 2 are already used above.
+# start at 3 since 1,2 is already taken.
 next_id = 3
 
+# 1. helper function
+# helps to find an item by id in the inventory list. Returns the item dict if found, or None if not found.
+# id comes in as text from the url, convert to number to compare.
 
-# ---------------------------------------------------------------------
-# Helper function: find one item in `inventory` by its id.
-# Returns the dictionary if found, or None if no item matches.
-# `id` arrives from the URL as a string, so we convert it to int
-# before comparing against item["id"], which is stored as a real int.
-# ---------------------------------------------------------------------
 def get_item(item_id):
     item_id = int(item_id)
     for item in inventory:
@@ -33,19 +25,17 @@ def get_item(item_id):
     return None
 
 
-# ---------------------------------------------------------------------
-# GET /inventory
-# Returns the full list of inventory items as JSON.
-# ---------------------------------------------------------------------
+# visit /inventory to see all items in inventory.
+# and return it as json
+
 @app.route("/inventory", methods=["GET"])
 def list_inventory():
     return jsonify(inventory)
 
+# if nothing is found return 404 error with error message 
+# if something found return that one item as json
 
-# ---------------------------------------------------------------------
-# GET /inventory/<id>
-# Returns a single item by id, or a 404 JSON error if not found.
-# ---------------------------------------------------------------------
+
 @app.route("/inventory/<id>", methods=["GET"])
 def get_single_item(id):
     item = get_item(id)
@@ -54,12 +44,9 @@ def get_single_item(id):
     return jsonify(item)
 
 
-# ---------------------------------------------------------------------
-# POST /inventory
-# Adds a new item to inventory. Expects a JSON body like:
-# {"barcode": 123, "name": "Eggs", "price": 300, "quantity": 20, "brand": "Kenchic"}
-# The id is assigned automatically — the client never supplies it.
-# ---------------------------------------------------------------------
+# request.get_json reads data that was sent in to create the item
+# checks if all require fields are there, if not return 400(bad request) error with message
+# if all good build new_dic. using next_id and add it to inventory status code is 201(created)
 @app.route("/inventory", methods=["POST"])
 def add_item():
     global next_id
@@ -85,11 +72,9 @@ def add_item():
     return jsonify(new_item), 201  # 201 = "Created", the correct REST status for POST
 
 
-# ---------------------------------------------------------------------
-# PATCH /inventory/<id>
-# Updates one or more fields of an existing item. Expects a JSON body
-# with only the fields that should change, e.g. {"price": 275}.
-# ---------------------------------------------------------------------
+# find element by id 
+# if not found return 404 error with message
+# if found update the fields that were sent in, leave the rest untouched.
 @app.route("/inventory/<id>", methods=["PATCH"])
 def update_item(id):
     item = get_item(id)
@@ -105,10 +90,9 @@ def update_item(id):
     return jsonify(item)
 
 
-# ---------------------------------------------------------------------
-# DELETE /inventory/<id>
-# Removes an item from inventory by id.
-# ---------------------------------------------------------------------
+# find element by id 
+# if not found return 404 error with message
+# inventory.remove(item) removes item from list.
 @app.route("/inventory/<id>", methods=["DELETE"])
 def delete_item(id):
     item = get_item(id)
@@ -119,12 +103,9 @@ def delete_item(id):
     return jsonify({"message": f"Item {id} deleted"})
 
 
-# ---------------------------------------------------------------------
-# GET /external/<barcode>
-# Looks up a product on the OpenFoodFacts API by barcode, and returns
-# the relevant product details. Does NOT add it to inventory — that's
-# a separate step the CLI/client decides to do with this data.
-# ---------------------------------------------------------------------
+# gets the product name from the query and searches OpenFoodFacts for a matching product.
+# if a product is found, return its barcode, name, brand and ingredients; 
+# otherwise return the appropriate error.
 @app.route("/external/<barcode>", methods=["GET"])
 def lookup_external_product(barcode):
     url = f"https://world.openfoodfacts.org/api/v0/product/{barcode}.json"
@@ -152,13 +133,9 @@ def lookup_external_product(barcode):
     return jsonify(result)
 
 
-# ---------------------------------------------------------------------
-# GET /external/search?name=<product name>
-# Searches OpenFoodFacts by product name (instead of exact barcode)
-# and returns the top result. Uses a query parameter since searching
-# by name is optional/flexible, unlike a barcode lookup which targets
-# one specific product.
-# ---------------------------------------------------------------------
+# gets the product name from the query and searches OpenFoodFacts for a matching product.
+# if a product is found, return its barcode, name, brand and ingredients;
+# otherwise return the appropriate error.
 @app.route("/external/search", methods=["GET"])
 def search_external_product():
     name = request.args.get("name")
